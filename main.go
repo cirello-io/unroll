@@ -4,10 +4,12 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
+	"golang.org/x/exp/slices"
 )
 
 func main() {
@@ -15,6 +17,7 @@ func main() {
 	log.SetPrefix("unroll: ")
 	appToken := os.Getenv("SLACK_APP_TOKEN")
 	token := os.Getenv("SLACK_BOT_TOKEN")
+	channels := strings.Split(os.Getenv("SLACK_CHANNELS"), ",")
 	client := slack.New(token, slack.OptionDebug(true), slack.OptionLog(log.Default()), slack.OptionAppLevelToken(appToken))
 	socketClient := socketmode.New(client, socketmode.OptionDebug(true), socketmode.OptionLog(log.Default()))
 	ctx, cancel := context.WithCancel(context.Background())
@@ -43,12 +46,16 @@ func main() {
 				if innerEvent.ThreadTimeStamp == "" {
 					continue
 				}
+				if !slices.Contains(channels, innerEvent.Channel) {
+					continue
+				}
 				permalinkParam := slack.PermalinkParameters{
 					Channel: innerEvent.Channel,
 					Ts:      innerEvent.TimeStamp,
 				}
 				url, err := client.GetPermalink(&permalinkParam)
 				if err != nil {
+					log.Println("cannot get permalink:", err)
 					continue
 				}
 				_, _, err = client.PostMessage(
