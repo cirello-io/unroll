@@ -4,12 +4,12 @@ import (
 	"context"
 	"log"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
-	"golang.org/x/exp/slices"
 )
 
 func main() {
